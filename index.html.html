@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スケジュール管理</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Noto Sans JP',sans-serif;background:#f1f5f9;min-height:100vh;color:#1e293b}
+  .app{max-width:640px;margin:0 auto;padding:16px}
+
+  .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:16px;background:#fff;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,.06);flex-wrap:wrap;gap:10px}
+  .header-left{display:flex;align-items:center;gap:10px}
+  .header-icon{font-size:30px;color:#4f46e5}
+  .header-title{font-size:18px;font-weight:700;color:#1e293b}
+  .header-sub{font-size:11px;color:#94a3b8;margin-top:2px}
+  .header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .view-toggle{display:flex;gap:6px}
+  .view-btn{padding:8px 13px;border-radius:10px;border:1px solid #e2e8f0;background:transparent;cursor:pointer;font-size:13px;color:#64748b;display:flex;align-items:center;gap:5px;transition:all .15s}
+  .view-btn:hover{background:#f8fafc}
+  .view-btn.active{background:#4f46e5;color:#fff;border-color:#4f46e5}
+
+  .login-btn{padding:8px 14px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:13px;color:#334155;display:flex;align-items:center;gap:6px;transition:all .15s;font-weight:500}
+  .login-btn:hover{background:#f8fafc;border-color:#c7d2fe}
+  .login-btn img{width:16px;height:16px}
+  .user-info{display:flex;align-items:center;gap:8px}
+  .user-avatar{width:32px;height:32px;border-radius:50%;border:2px solid #e2e8f0}
+  .logout-btn{font-size:12px;color:#94a3b8;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px}
+  .logout-btn:hover{color:#ef4444;background:#fef2f2}
+
+  .sync-badge{font-size:11px;padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:4px}
+  .sync-badge.online{background:#f0fdf4;color:#16a34a}
+  .sync-badge.offline{background:#f1f5f9;color:#94a3b8}
+
+  .form-card{background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .form-title{font-size:13px;font-weight:600;color:#64748b;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+  .form-row{display:flex;gap:8px;margin-bottom:10px}
+  .form-input{flex:1;padding:10px 12px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;color:#1e293b;font-size:14px;font-family:inherit;transition:border .15s}
+  .form-input:focus{outline:none;border-color:#4f46e5;background:#fff}
+  .time-row{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;margin-bottom:10px}
+  .time-sep{font-size:13px;color:#94a3b8;text-align:center}
+  .flag-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .flag-btn{padding:8px 13px;border-radius:10px;border:1px solid #e2e8f0;background:transparent;cursor:pointer;font-size:13px;color:#64748b;display:flex;align-items:center;gap:5px;transition:all .15s}
+  .flag-btn:hover{background:#fff7ed;color:#ea580c;border-color:#fed7aa}
+  .flag-btn.active{background:#fff7ed;color:#ea580c;border-color:#fed7aa}
+  .form-select{padding:10px 10px;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc;color:#1e293b;font-size:13px;font-family:inherit;cursor:pointer}
+  .btn-row{display:flex;gap:8px}
+  .submit-btn{flex:1;padding:10px;border-radius:10px;background:#4f46e5;color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;transition:background .15s}
+  .submit-btn:hover{background:#4338ca}
+  .cancel-btn{padding:10px 16px;border-radius:10px;background:transparent;color:#64748b;border:1px solid #e2e8f0;cursor:pointer;font-size:14px;transition:all .15s}
+  .cancel-btn:hover{background:#f8fafc}
+
+  .section-header{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 10px;margin-top:4px}
+  .section-label{font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.08em}
+  .show-completed-btn{font-size:12px;color:#4f46e5;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px}
+  .show-completed-btn:hover{background:#eef2ff}
+
+  .date-group{margin-bottom:18px}
+  .date-header{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:10px;cursor:pointer;margin-bottom:8px;transition:background .1s}
+  .date-header:hover{background:#f1f5f9}
+  .date-label{font-size:14px;font-weight:600;color:#334155}
+  .date-label.today{color:#4f46e5}
+  .date-count{font-size:12px;color:#94a3b8;background:#f1f5f9;padding:3px 10px;border-radius:20px}
+  .date-count.all-done{background:#f0fdf4;color:#16a34a}
+
+  .task-item{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;background:#fff;border-radius:14px;border:1px solid #e2e8f0;margin-bottom:8px;transition:all .15s;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+  .task-item:hover{border-color:#c7d2fe;box-shadow:0 2px 8px rgba(79,70,229,.08)}
+  .task-item.flagged{background:#fffbf5;border-color:#fed7aa}
+  .task-item.flagged:hover{border-color:#fb923c}
+  .task-item.completed-item{opacity:.55}
+  .toggle-btn{flex-shrink:0;background:none;border:none;cursor:pointer;font-size:22px;padding:0;color:#cbd5e1;line-height:1;transition:color .15s}
+  .toggle-btn:hover{color:#4f46e5}
+  .toggle-btn.done{color:#22c55e}
+  .task-content{flex:1;min-width:0}
+  .task-text{font-size:14px;color:#1e293b;word-break:break-word;line-height:1.5}
+  .task-text.done{text-decoration:line-through;color:#94a3b8}
+  .task-meta{display:flex;align-items:center;gap:8px;margin-top:5px;flex-wrap:wrap}
+  .task-time{font-size:12px;color:#94a3b8;display:flex;align-items:center;gap:3px}
+  .recur-badge{font-size:11px;color:#4f46e5;background:#eef2ff;padding:2px 8px;border-radius:20px;display:flex;align-items:center;gap:3px}
+  .task-actions{display:flex;gap:2px;flex-shrink:0}
+  .action-btn{padding:7px;border-radius:9px;background:none;border:none;cursor:pointer;font-size:17px;color:#cbd5e1;transition:all .15s}
+  .action-btn:hover{color:#4f46e5;background:#eef2ff}
+  .action-btn.flag-active{color:#ea580c;background:#fff7ed}
+  .action-btn.flag-active:hover{color:#ea580c;background:#ffedd5}
+  .action-btn.delete:hover{color:#ef4444;background:#fef2f2}
+
+  .empty-state{text-align:center;padding:40px 20px;background:#fff;border-radius:14px;border:1px dashed #e2e8f0;color:#94a3b8;font-size:14px}
+  .empty-icon{font-size:36px;display:block;margin-bottom:10px;color:#c7d2fe}
+
+  .cal-card{background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .cal-month{font-size:16px;font-weight:700;color:#1e293b}
+  .nav-btn{padding:7px 11px;border-radius:10px;border:1px solid #e2e8f0;background:transparent;cursor:pointer;color:#334155;font-size:17px;transition:all .15s;display:flex;align-items:center}
+  .nav-btn:hover{background:#f1f5f9}
+  .today-btn{font-size:12px;color:#4f46e5;background:none;border:none;cursor:pointer;padding:5px 10px;border-radius:8px;font-weight:600}
+  .today-btn:hover{background:#eef2ff}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+  .cal-dow{text-align:center;font-size:11px;font-weight:700;padding:6px 0;color:#94a3b8}
+  .cal-dow.sun{color:#ef4444}
+  .cal-dow.sat{color:#3b82f6}
+  .cal-day{min-height:70px;display:flex;flex-direction:column;align-items:center;padding:5px 2px;border-radius:10px;cursor:pointer;border:1px solid transparent;transition:all .1s}
+  .cal-day:hover{background:#f8fafc}
+  .cal-day.other-month .day-num{color:#cbd5e1}
+  .cal-day.today .day-num{background:#4f46e5;color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .cal-day.selected{background:#eef2ff;border-color:#c7d2fe}
+  .day-num{font-size:13px;color:#334155;margin-bottom:4px;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
+  .cal-dot{font-size:10px;background:#ffedd5;color:#9a3412;border-radius:4px;padding:1px 4px;width:100%;text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin-bottom:2px}
+  .cal-more{font-size:9px;color:#94a3b8;text-align:center}
+  .cal-detail{background:#fff;border-radius:16px;border:1px solid #e2e8f0;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+  .cal-detail-title{font-size:13px;font-weight:600;color:#64748b;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e293b;color:#fff;padding:10px 20px;border-radius:12px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;white-space:nowrap}
+  .toast.show{opacity:1}
+
+  .loading{text-align:center;padding:40px;color:#94a3b8;font-size:14px}
+
+  @media(max-width:480px){
+    .app{padding:10px}
+    .view-btn span{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-left">
+      <i class="ti ti-calendar-event header-icon" aria-hidden="true"></i>
+      <div>
+        <div class="header-title">スケジュール管理</div>
+        <div class="header-sub">大切な予定を逃さないようにしましょう。</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div id="auth-area">
+        <button class="login-btn" onclick="handleLogin()">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+          Googleでログイン
+        </button>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="btn-list" onclick="setView('list')">
+          <i class="ti ti-list-details" aria-hidden="true"></i><span>リスト</span>
+        </button>
+        <button class="view-btn" id="btn-cal" onclick="setView('calendar')">
+          <i class="ti ti-calendar" aria-hidden="true"></i><span>カレンダー</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-title"><i class="ti ti-plus-circle" aria-hidden="true"></i><span id="form-title-text">予定を追加</span></div>
+    <div class="form-row">
+      <input class="form-input" id="task-input" type="text" placeholder="予定のタイトルを入力..." onkeydown="if(event.key==='Enter')submitTask()"/>
+    </div>
+    <div class="form-row">
+      <input class="form-input" id="date-input" type="date"/>
+    </div>
+    <div class="time-row">
+      <input class="form-input" id="start-input" type="time" value="12:00"/>
+      <div class="time-sep">〜</div>
+      <input class="form-input" id="end-input" type="time" value="13:00"/>
+    </div>
+    <div class="flag-row">
+      <button class="flag-btn" id="flag-btn" onclick="toggleFlagForm()">
+        <i class="ti ti-flag" aria-hidden="true"></i>重要
+      </button>
+      <select class="form-select" id="recur-select">
+        <option value="none">繰り返しなし</option>
+        <option value="daily">毎日</option>
+        <option value="weekly">毎週</option>
+        <option value="monthly-date">毎月（日付）</option>
+        <option value="monthly-weekday">毎月（曜日）</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="submit-btn" onclick="submitTask()">
+        <i class="ti ti-check" aria-hidden="true"></i><span id="submit-label">追加する</span>
+      </button>
+      <button class="cancel-btn" id="cancel-btn" style="display:none" onclick="cancelEdit()">キャンセル</button>
+    </div>
+  </div>
+
+  <div id="list-view">
+    <div class="section-header">
+      <span class="section-label">予定一覧</span>
+      <button class="show-completed-btn" onclick="toggleShowCompleted()" id="show-completed-btn">完了済みを表示</button>
+    </div>
+    <div id="tasks-container"><div class="loading"><i class="ti ti-loader" style="font-size:24px;display:block;margin-bottom:8px"></i>読み込み中...</div></div>
+  </div>
+
+  <div id="cal-view" style="display:none">
+    <div class="cal-card">
+      <div class="cal-nav">
+        <button class="nav-btn" onclick="changeMonth(-1)"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="cal-month" id="cal-month-label"></span>
+          <button class="today-btn" onclick="goToday()">今月</button>
+        </div>
+        <button class="nav-btn" onclick="changeMonth(1)"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="cal-detail">
+      <div class="cal-detail-title"><i class="ti ti-flag" style="color:#ea580c" aria-hidden="true"></i><span id="cal-detail-title">この日の重要予定</span></div>
+      <div id="cal-detail-tasks"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, query, where } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+import { getAuth, signInWithPopup, signOut, onAuthStateChanged, GoogleAuthProvider } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+
+// ========== Firebase設定（ここを書き換える） ==========
+const firebaseConfig = {
+  apiKey: "AlzaSyCaojPYlpzAjB3-GQsFYD7uEi9GWi2VfaU",
+  authDomain: "schedule-app-6b3ee.firebaseapp.com",
+  projectId: "schedule-app-6b3ee",
+  storageBucket: "schedule-app-6b3ee.firebasestorage.app",
+  messagingSenderId: "2950396489",
+  appId: "1:2950396489:web:07976f1686504dde4add98"
+};
+// =====================================================
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+let tasks = [];
+let currentUser = null;
+let unsubscribe = null;
+let editingId = null;
+let flagged = false;
+let showCompleted = false;
+let view = 'list';
+let currentMonth = new Date();
+let selectedDate = toLocalDate(new Date());
+let expandedDates = {};
+
+function toLocalDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ===== Auth =====
+onAuthStateChanged(auth, user => {
+  currentUser = user;
+  updateAuthUI(user);
+  if (user) {
+    subscribeToTasks(user.uid);
+  } else {
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+    tasks = loadLocal();
+    render();
+  }
+});
+
+function updateAuthUI(user) {
+  const area = document.getElementById('auth-area');
+  if (user) {
+    area.innerHTML = `<div class="user-info">
+      <span class="sync-badge online"><i class="ti ti-cloud-check"></i>同期中</span>
+      <img class="user-avatar" src="${user.photoURL || ''}" alt="user" referrerpolicy="no-referrer">
+      <button class="logout-btn" onclick="handleLogout()">ログアウト</button>
+    </div>`;
+  } else {
+    area.innerHTML = `<div class="user-info">
+      <span class="sync-badge offline"><i class="ti ti-cloud-off"></i>ローカル</span>
+      <button class="login-btn" onclick="handleLogin()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">Googleでログイン
+      </button>
+    </div>`;
+  }
+}
+
+window.handleLogin = async () => {
+  try { await signInWithPopup(auth, provider); }
+  catch(e) { showToast('ログインに失敗しました'); }
+};
+window.handleLogout = async () => {
+  try { await signOut(auth); showToast('ログアウトしました'); }
+  catch(e) {}
+};
+
+// ===== Firestore =====
+function subscribeToTasks(uid) {
+  if (unsubscribe) unsubscribe();
+  const q = query(collection(db, 'tasks'), where('uid', '==', uid));
+  unsubscribe = onSnapshot(q, snapshot => {
+    tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  });
+}
+
+async function saveTask(task) {
+  if (currentUser) {
+    await setDoc(doc(db, 'tasks', task.id), { ...task, uid: currentUser.uid });
+  } else {
+    const idx = tasks.findIndex(t => t.id === task.id);
+    if (idx >= 0) tasks[idx] = task; else tasks.push(task);
+    saveLocal();
+    render();
+  }
+}
+
+async function removeTask(id) {
+  if (currentUser) {
+    await deleteDoc(doc(db, 'tasks', id));
+  } else {
+    tasks = tasks.filter(t => t.id !== id);
+    saveLocal();
+    render();
+  }
+}
+
+// ===== LocalStorage fallback =====
+const LS_KEY = 'schedule-app-v1';
+function loadLocal() {
+  try { const s = localStorage.getItem(LS_KEY); return s ? JSON.parse(s) : []; } catch(e) { return []; }
+}
+function saveLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(tasks)); } catch(e) {}
+}
+
+// ===== Logic =====
+function isOnRecurrence(checkDate, task) {
+  const [ty,tm,td] = task.date.split('-').map(Number);
+  const base = new Date(ty,tm-1,td);
+  const check = new Date(checkDate+'T00:00:00');
+  if (check < base) return false;
+  if (task.date === checkDate) return true;
+  if (!task.recurrence || task.recurrence === 'none') return false;
+  if (task.recurrence === 'daily') return true;
+  if (task.recurrence === 'weekly') return base.getDay() === check.getDay();
+  if (task.recurrence === 'monthly-date') return base.getDate() === check.getDate();
+  if (task.recurrence === 'monthly-weekday') {
+    const nth = n => Math.floor((n.getDate()-1)/7);
+    return base.getDay()===check.getDay() && nth(base)===nth(check);
+  }
+  return false;
+}
+
+function formatDate(s) {
+  const today = toLocalDate(new Date());
+  if (s === today) return '今日';
+  const tom = new Date(); tom.setDate(tom.getDate()+1);
+  if (s === toLocalDate(tom)) return '明日';
+  const [y,m,d] = s.split('-').map(Number);
+  const dt = new Date(y,m-1,d);
+  const days=['日','月','火','水','木','金','土'];
+  return `${m}月${d}日（${days[dt.getDay()]}）`;
+}
+
+function recurLabel(r) {
+  return {daily:'毎日',weekly:'毎週','monthly-date':'毎月','monthly-weekday':'毎月(曜日)'}[r]||'';
+}
+
+function isCompleted(task, date) {
+  if (task.recurrence && task.recurrence !== 'none') return !!(task.completedDates && task.completedDates[date]);
+  return task.completed;
+}
+
+function groupTasksByDate() {
+  const groups = {};
+  const today = new Date();
+  const start = new Date(today.getFullYear(), today.getMonth()-1, 1);
+  const end = new Date(today.getFullYear(), today.getMonth()+3, 0);
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+    const ds = toLocalDate(d);
+    tasks.forEach(t => {
+      if (isOnRecurrence(ds, t)) {
+        if (!groups[ds]) groups[ds] = [];
+        if (!groups[ds].some(x => x.id === t.id)) groups[ds].push(t);
+      }
+    });
+  }
+  Object.keys(groups).forEach(k => groups[k].sort((a,b) => a.startTime.localeCompare(b.startTime)));
+  return groups;
+}
+
+// ===== Render =====
+function render() {
+  if (view === 'list') renderList(); else renderCalendar();
+}
+
+function renderList() {
+  const container = document.getElementById('tasks-container');
+  const groups = groupTasksByDate();
+  const dates = Object.keys(groups).sort();
+  const today = toLocalDate(new Date());
+  const renderDates = showCompleted ? dates : dates.filter(d => groups[d].some(t => !isCompleted(t,d)));
+
+  if (renderDates.length === 0) {
+    container.innerHTML = `<div class="empty-state"><i class="ti ti-calendar-check empty-icon"></i>予定がありません<br><span style="font-size:12px;color:#cbd5e1;margin-top:6px;display:block">上のフォームから追加しましょう</span></div>`;
+    return;
+  }
+  let html = '';
+  renderDates.forEach(date => {
+    const dayTasks = groups[date];
+    const isToday = date === today;
+    const expanded = expandedDates[date] !== false;
+    const allDone = dayTasks.every(t => isCompleted(t,date));
+    const pendingCount = dayTasks.filter(t => !isCompleted(t,date)).length;
+    html += `<div class="date-group">
+      <div class="date-header" onclick="toggleDate('${date}')">
+        <span class="date-label${isToday?' today':''}">${isToday?'📅 ':''}<b>${formatDate(date)}</b></span>
+        <span class="date-count${allDone?' all-done':''}">${allDone?'✓ すべて完了':'残り '+pendingCount+' 件'}</span>
+      </div>`;
+    if (expanded) dayTasks.forEach(t => { html += renderTaskItem(t, date); });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function renderTaskItem(t, date) {
+  const done = isCompleted(t, date);
+  const rl = recurLabel(t.recurrence);
+  return `<div class="task-item${t.isFlagged?' flagged':''}${done?' completed-item':''}">
+    <button class="toggle-btn${done?' done':''}" onclick="toggleTask('${t.id}','${date}')">
+      <i class="ti ti-${done?'circle-check-filled':'circle'}" aria-hidden="true"></i>
+    </button>
+    <div class="task-content">
+      <div class="task-text${done?' done':''}">${escHtml(t.text)}${t.isFlagged?' <i class="ti ti-flag" style="font-size:12px;color:#ea580c;vertical-align:middle" aria-hidden="true"></i>':''}</div>
+      <div class="task-meta">
+        <span class="task-time"><i class="ti ti-clock" style="font-size:12px" aria-hidden="true"></i> ${t.startTime} 〜 ${t.endTime}</span>
+        ${rl?`<span class="recur-badge"><i class="ti ti-refresh" style="font-size:11px" aria-hidden="true"></i>${rl}</span>`:''}
+      </div>
+    </div>
+    <div class="task-actions">
+      <button class="action-btn" onclick="startEdit('${t.id}')" title="編集"><i class="ti ti-pencil" aria-hidden="true"></i></button>
+      <button class="action-btn${t.isFlagged?' flag-active':''}" onclick="toggleFlagTask('${t.id}')" title="重要"><i class="ti ti-flag" aria-hidden="true"></i></button>
+      <button class="action-btn delete" onclick="deleteTask('${t.id}')" title="削除"><i class="ti ti-trash" aria-hidden="true"></i></button>
+    </div>
+  </div>`;
+}
+
+function buildCalFlaggedGroups() {
+  const groups = {};
+  const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
+  const start = new Date(y,m-1,1), end = new Date(y,m+2,0);
+  tasks.filter(t => t.isFlagged).forEach(t => {
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate()+1)) {
+      const ds = toLocalDate(d);
+      if (isOnRecurrence(ds,t)) {
+        if (!groups[ds]) groups[ds] = [];
+        if (!groups[ds].some(x => x.id === t.id)) groups[ds].push(t);
+      }
+    }
+  });
+  return groups;
+}
+
+function renderCalendar() {
+  const y = currentMonth.getFullYear(), m = currentMonth.getMonth();
+  document.getElementById('cal-month-label').textContent = `${y}年${m+1}月`;
+  const first = new Date(y,m,1), last = new Date(y,m+1,0);
+  const today = toLocalDate(new Date());
+  const flaggedGroups = buildCalFlaggedGroups();
+  const dows = ['日','月','火','水','木','金','土'];
+  let html = dows.map((d,i) => `<div class="cal-dow${i===0?' sun':i===6?' sat':''}">${d}</div>`).join('');
+  const startDow = first.getDay();
+  const prevLast = new Date(y,m,0).getDate();
+  for (let i = startDow-1; i >= 0; i--) html += `<div class="cal-day other-month"><div class="day-num">${prevLast-i}</div></div>`;
+  for (let i = 1; i <= last.getDate(); i++) {
+    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+    const isToday = ds===today, isSel = ds===selectedDate;
+    const dayTasks = flaggedGroups[ds]||[];
+    let dots = dayTasks.slice(0,2).map(t => `<div class="cal-dot">${escHtml(t.text)}</div>`).join('');
+    if (dayTasks.length > 2) dots += `<div class="cal-more">他${dayTasks.length-2}件</div>`;
+    html += `<div class="cal-day${isToday?' today':''}${isSel?' selected':''}" onclick="selectCalDate('${ds}')"><div class="day-num">${i}</div>${dots}</div>`;
+  }
+  const remain = 42-(startDow+last.getDate());
+  for (let i = 1; i <= remain; i++) html += `<div class="cal-day other-month"><div class="day-num">${i}</div></div>`;
+  document.getElementById('cal-grid').innerHTML = html;
+  const selTasks = flaggedGroups[selectedDate]||[];
+  document.getElementById('cal-detail-title').textContent = `${formatDate(selectedDate)} の重要予定`;
+  document.getElementById('cal-detail-tasks').innerHTML = selTasks.length
+    ? selTasks.map(t => renderTaskItem(t, selectedDate)).join('')
+    : `<div class="empty-state" style="padding:20px"><i class="ti ti-calendar-off empty-icon" style="font-size:28px"></i>この日の重要予定はありません</div>`;
+}
+
+// ===== Actions =====
+window.setView = v => {
+  view = v;
+  document.getElementById('list-view').style.display = v==='list' ? '' : 'none';
+  document.getElementById('cal-view').style.display = v==='calendar' ? '' : 'none';
+  document.getElementById('btn-list').className = 'view-btn'+(v==='list'?' active':'');
+  document.getElementById('btn-cal').className = 'view-btn'+(v==='calendar'?' active':'');
+  render();
+};
+
+window.toggleDate = d => { expandedDates[d] = expandedDates[d]===false; renderList(); };
+window.toggleFlagForm = () => {
+  flagged = !flagged;
+  document.getElementById('flag-btn').className = 'flag-btn'+(flagged?' active':'');
+};
+window.toggleShowCompleted = () => {
+  showCompleted = !showCompleted;
+  document.getElementById('show-completed-btn').textContent = showCompleted ? '完了済みを非表示' : '完了済みを表示';
+  renderList();
+};
+
+window.submitTask = async () => {
+  const text = document.getElementById('task-input').value.trim();
+  if (!text) { document.getElementById('task-input').focus(); return; }
+  const date = document.getElementById('date-input').value;
+  const start = document.getElementById('start-input').value;
+  const end = document.getElementById('end-input').value;
+  const recur = document.getElementById('recur-select').value;
+  if (editingId) {
+    const t = tasks.find(x => x.id === editingId);
+    if (t) await saveTask({ ...t, text, date, startTime:start, endTime:end, recurrence:recur, isFlagged:flagged });
+    showToast('✓ 予定を更新しました');
+    cancelEdit();
+  } else {
+    const newTask = { id: Math.random().toString(36).slice(2)+Date.now().toString(36), text, completed:false, isFlagged:flagged, date, startTime:start, endTime:end, createdAt:Date.now(), recurrence:recur, completedDates:{} };
+    await saveTask(newTask);
+    document.getElementById('task-input').value = '';
+    flagged = false;
+    document.getElementById('flag-btn').className = 'flag-btn';
+    document.getElementById('recur-select').value = 'none';
+    showToast('✓ 予定を追加しました');
+  }
+};
+
+window.cancelEdit = () => {
+  editingId = null; flagged = false;
+  document.getElementById('task-input').value = '';
+  document.getElementById('flag-btn').className = 'flag-btn';
+  document.getElementById('recur-select').value = 'none';
+  document.getElementById('date-input').value = toLocalDate(new Date());
+  document.getElementById('start-input').value = '12:00';
+  document.getElementById('end-input').value = '13:00';
+  document.getElementById('form-title-text').textContent = '予定を追加';
+  document.getElementById('submit-label').textContent = '追加する';
+  document.getElementById('cancel-btn').style.display = 'none';
+};
+
+window.startEdit = id => {
+  const t = tasks.find(x => x.id === id); if (!t) return;
+  editingId = id;
+  document.getElementById('task-input').value = t.text;
+  document.getElementById('date-input').value = t.date;
+  document.getElementById('start-input').value = t.startTime;
+  document.getElementById('end-input').value = t.endTime;
+  document.getElementById('recur-select').value = t.recurrence||'none';
+  flagged = t.isFlagged;
+  document.getElementById('flag-btn').className = 'flag-btn'+(flagged?' active':'');
+  document.getElementById('form-title-text').textContent = '予定を編集';
+  document.getElementById('submit-label').textContent = '保存する';
+  document.getElementById('cancel-btn').style.display = '';
+  document.querySelector('.form-card').scrollIntoView({behavior:'smooth'});
+};
+
+window.toggleTask = async (id, date) => {
+  const t = tasks.find(x => x.id === id); if (!t) return;
+  if (t.recurrence && t.recurrence !== 'none') {
+    const cd = { ...(t.completedDates||{}) };
+    cd[date] = !cd[date];
+    await saveTask({ ...t, completedDates:cd });
+  } else {
+    await saveTask({ ...t, completed:!t.completed });
+  }
+};
+
+window.toggleFlagTask = async id => {
+  const t = tasks.find(x => x.id === id); if (!t) return;
+  await saveTask({ ...t, isFlagged:!t.isFlagged });
+};
+
+window.deleteTask = async id => {
+  if (!confirm('この予定を削除しますか？')) return;
+  await removeTask(id);
+  showToast('予定を削除しました');
+};
+
+window.changeMonth = offset => { currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth()+offset, 1); renderCalendar(); };
+window.goToday = () => { currentMonth = new Date(); selectedDate = toLocalDate(new Date()); renderCalendar(); };
+window.selectCalDate = d => { selectedDate = d; renderCalendar(); };
+
+document.getElementById('date-input').value = toLocalDate(new Date());
+</script>
+</body>
+</html>
